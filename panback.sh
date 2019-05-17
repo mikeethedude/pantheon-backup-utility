@@ -36,7 +36,20 @@ echo "$DELETE"
 
 db_backup() {
 
-echo "Getting latest database backup for ${ENV}.${SITE}"
+echo -n "Please enter database credentials so we can import this properly \n"
+echo -n "Enter Database Name and press [ENTER]"
+read dbname
+echo -n "Enter Database User and press [ENTER]"
+read dbuser
+echo -n "Enter Datbase Password and press [ENTER]"
+read -s dbpass
+echo -n "Enter Database Host and press [ENTER]"
+read dbhost
+echo -n "Enter Database Port and press [ENTER]"
+read -p "[3306] " dbport
+port="${port:-3306}"
+
+echo -n "Getting latest database backup for ${ENV}.${SITE}"
 
 # Getting backup file
 BACKUP="$(terminus backup:get ${SITE}.${ENV} --element=db --to=${BACKUP_DIR}/db.sql.gz)"
@@ -52,9 +65,22 @@ echo "Pantheon backup failed. Please check displayed error and try again"
 exit
 fi
 
+EXTRACTED=$(gunzip ${BACKUP_DIR}/db.sql.gz)
+echo "$EXTRACTED"
+
+wait $!
+
+# Dropping all tables from DB
+echo "Clearing any existing tables in DB..."
+DROP="$(yes | drush sql-drop)"
+
+echo "$DROP"
+
+wait $!
+
 # Importing db
 echo "Importing DB Backup..."
-IMPORT="$(lando db-import ${BACKUP_DIR}/db.sql.gz)"
+IMPORT="$(mysql -u${dbuser} -h${dbhost} -p${dbpass} {dbname} < ${BACKUP_DIR}/db.sql)"
 echo "$IMPORT"
 
 wait $!
