@@ -15,7 +15,7 @@ TYPE=$3
 
 # Running this script from the private/scripts directory
 cd "${0%/*}"
-BACKUP_DIR="/tmp""
+BACKUP_DIR="/tmp"
 
 # Creating backup of type on the Pantheon environment
 create_backup() {
